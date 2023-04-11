@@ -1,5 +1,5 @@
 import { Executable } from "heng-protocol";
-import { HengSpawnOption } from "..";
+import { SpawnOption } from "..";
 
 export enum ExecType {
     System = "system",
@@ -21,7 +21,7 @@ export type RunOption =
           skip: false;
           command: string;
           args?: string[];
-          spawnOption?: HengSpawnOption;
+          spawnOption?: SpawnOption;
       };
 
 export interface LanguageConfigureOption {

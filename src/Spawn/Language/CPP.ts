@@ -1,7 +1,7 @@
 import path from "path";
 import { getConfig } from "../../Config";
-import { JailBindMountOption } from "../Jail";
 import { RunOption, Language, LanguageConfigureOption } from "./decl";
+import { MountOption } from "..";
 
 export class CPP extends Language {
     private src = "src.cpp";
@@ -42,18 +42,21 @@ export class CPP extends Language {
         if (this.excutable.environment.options?.lm !== false) {
             compilerOptions.push("-lm");
         }
-        const bindMount: JailBindMountOption[] = [
+        const bindMount: MountOption[] = [
             {
                 source: this.compileDir,
-                mode: "rw",
+                destination: this.compileDir,
+                type: "bind",
+                readonly: false,
             },
         ];
         // default off
         if (this.excutable.environment.options?.testlib === true) {
             bindMount.push({
                 source: getConfig().language.testlib,
-                dest: path.join(this.compileDir, "testlib.h"),
-                mode: "ro",
+                destination: path.join(this.compileDir, "testlib.h"),
+                type: "bind",
+                readonly: true,
             });
         }
         return {

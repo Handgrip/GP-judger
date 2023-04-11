@@ -1,13 +1,10 @@
 import { C } from "./C";
-import { CMP } from "./CMP";
 import { CPP } from "./CPP";
 import { Language, LanguageConfigureOption } from "./decl";
 import { Java } from "./Java";
-// import { JS } from "./JS";
-// import { Pascal } from "./Pascal";
+import { JS } from "./JS";
 import { PlainText } from "./PlainText";
 import { Python } from "./Python";
-import { Rust } from "./Rust";
 
 export function getConfiguredLanguage(
     lang: string,
@@ -35,18 +32,10 @@ export function getConfiguredLanguage(
         case "plaintext":
             return new PlainText(option);
             break;
-        case "rust":
-            return new Rust(option);
+        case "js":
+        case "javascript":
+            return new JS(option);
             break;
-        // case "js":
-        // case "javascript":
-        //     return new JS(option);
-        //     break;
-        // case "pascal":
-        //     return new Pascal(option);
-        //     break;
-        case "cmp":
-            return new CMP(option);
         default:
             throw new Error("Unrecognized language");
             break;

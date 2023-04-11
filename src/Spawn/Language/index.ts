@@ -3,7 +3,6 @@ import { CPP } from "./CPP";
 import { Language, LanguageConfigureOption } from "./decl";
 import { Java } from "./Java";
 import { JS } from "./JS";
-import { PlainText } from "./PlainText";
 import { Python } from "./Python";
 
 export function getConfiguredLanguage(
@@ -28,9 +27,6 @@ export function getConfiguredLanguage(
         case "python":
         case "python3":
             return new Python(option);
-            break;
-        case "plaintext":
-            return new PlainText(option);
             break;
         case "js":
         case "javascript":

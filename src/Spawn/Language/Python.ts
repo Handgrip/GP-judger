@@ -35,7 +35,7 @@ export class Python extends Language {
                 bindMount: [
                     {
                         source: binPath,
-                        mode: "ro",
+                        readonly: true,
                     },
                 ],
             },

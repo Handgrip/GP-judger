@@ -1,5 +1,5 @@
 import { Executable } from "heng-protocol";
-import { SpawnOption } from "..";
+import { SpawnOption } from "../";
 
 export enum ExecType {
     System = "system",
@@ -14,7 +14,7 @@ export const ExecTypeArray = [
     ExecType.Interactive,
 ];
 
-// Extract from HengSpawnOption
+// Extract from SpawnOption
 export type RunOption =
     | { skip: true }
     | {

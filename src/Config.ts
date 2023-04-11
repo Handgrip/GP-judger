@@ -37,43 +37,7 @@ export class LanguageConfig {
     javac!: string;
     @IsString()
     @IsNotEmpty()
-    cat!: string;
-    @IsString()
-    @IsNotEmpty()
     node!: string;
-    @IsString()
-    @IsNotEmpty()
-    pascal!: string;
-    @IsString()
-    @IsNotEmpty()
-    ojcmp!: string;
-    @IsString()
-    @IsNotEmpty()
-    rustc!: string;
-}
-export class JailConfig {
-    @IsString()
-    @IsNotEmpty()
-    path!: string;
-    @IsString()
-    @IsNotEmpty()
-    configFile!: string;
-}
-export class MeterConfig {
-    @IsString()
-    @IsNotEmpty()
-    path!: string;
-}
-export class ControllerConfig {
-    @IsString()
-    @IsNotEmpty()
-    host!: string;
-    @IsString()
-    @IsNotEmpty()
-    SecrectKey!: string;
-    @IsString()
-    @IsNotEmpty()
-    AccessKey!: string;
 }
 export class SelfConfig {
     @IsInt()
@@ -87,44 +51,20 @@ export class SelfConfig {
     software?: string;
 }
 export class JudgeFactoryConfig {
-    @IsBoolean()
-    noSelfTestError!: boolean;
     @IsString()
     @IsNotEmpty()
     tmpdirBase!: string;
-    @IsNumber()
-    @IsPositive()
-    timeRatioTolerance!: number;
     @IsInt()
     @IsPositive()
     defaultPidLimit!: number;
-    @IsNumber()
-    @IsPositive()
-    defaultTimeRatio!: number;
-    @IsInt()
-    @Min(0)
-    selfTestRound!: number;
     @IsInt()
     @Min(1000)
     uid!: number;
     @IsInt()
     @Min(1000)
     gid!: number;
-    @IsBoolean()
-    cacheUsr!: boolean;
-    @IsBoolean()
-    cacheSpj!: boolean;
-    @IsBoolean()
-    cacheInteractor!: boolean;
-    @IsInt()
-    @IsPositive()
-    remoteFileCacheBytes!: number;
 }
 export class Config {
-    @ValidateNested()
-    @IsNotEmpty()
-    @Type(() => ControllerConfig)
-    controller!: ControllerConfig;
     @ValidateNested()
     @IsNotEmpty()
     @Type(() => SelfConfig)
@@ -133,14 +73,6 @@ export class Config {
     @IsNotEmpty()
     @Type(() => LanguageConfig)
     language!: LanguageConfig;
-    @ValidateNested()
-    @IsNotEmpty()
-    @Type(() => JailConfig)
-    nsjail!: JailConfig;
-    @ValidateNested()
-    @IsNotEmpty()
-    @Type(() => MeterConfig)
-    hc!: MeterConfig;
     @ValidateNested()
     @IsNotEmpty()
     @Type(() => JudgeFactoryConfig)

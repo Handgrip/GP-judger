@@ -49,7 +49,7 @@ export class C extends Language {
                 bindMount: [
                     {
                         source: this.compileDir,
-                        mode: "rw",
+                        readonly: false,
                     },
                 ],
             },
@@ -69,7 +69,7 @@ export class C extends Language {
                 bindMount: [
                     {
                         source: binPath,
-                        mode: "ro",
+                        readonly: true,
                     },
                 ],
             },

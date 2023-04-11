@@ -35,10 +35,10 @@ export class JS extends Language {
                 bindMount: [
                     {
                         source: binPath,
-                        mode: "ro",
+                        readonly: true,
                     },
                 ],
-                symlink: [{ source: "/proc/self/fd/0", dest: "/dev/stdin" }],
+                // symlink: [{ source: "/proc/self/fd/0", dest: "/dev/stdin" }],
             },
         };
     }

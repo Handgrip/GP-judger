@@ -2,18 +2,10 @@ import { execFile, ChildProcess } from "child_process";
 import fs from "fs/promises";
 import { getLogger } from "log4js";
 import path from "path";
+import { Usage } from "src/decl";
 
 const logger = getLogger("Process");
 
-export interface TimeUsage {
-    usr: number;
-    real: number;
-    sys: number;
-}
-export interface Usage {
-    time: TimeUsage;
-    memory: number;
-}
 const CgPath = "/sys/fs/cgroup";
 const DockerGroup = "docker";
 enum SubSystem {

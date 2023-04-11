@@ -1,16 +1,16 @@
 import path from "path";
 import fs from "fs/promises";
 import os from "os";
-import { CompleteStdioOptions } from "src/Spawn/BasicSpawn";
+import { CompleteStdioOptions } from "./BasicSpawn";
 import { spawn } from "child_process";
-import { backOff } from "./util";
-import { DockerHelper } from "src/Spawn/Process";
+import { backOff } from "../Utilities/util";
+import { DockerHelper } from "./Process";
 
 export interface MountOption {
-    type: "bind" | "tmpfs";
+    type?: "bind" | "tmpfs";
     source: string;
-    destination: string;
-    readonly: boolean;
+    destination?: string;
+    readonly?: boolean;
 }
 export interface SpawnOption {
     bindMount?: MountOption[];
@@ -25,7 +25,7 @@ export interface SpawnOption {
     gid?: number;
     cwd?: string;
 }
-async function dockerSpawn(
+export async function dockerSpawn(
     command: string,
     args: string[],
     option: SpawnOption
@@ -52,7 +52,7 @@ async function dockerSpawn(
         dockerArgs.push(`--pids-limit=${option.pidLimit}`);
     }
     if (option.fileLimit) {
-        const t = option.fileLimit / 1024 / 1024;
+        const t = Math.ceil(option.fileLimit / 1024 / 1024);
         dockerArgs.push("--ulimit", `FSIZE=${t}:${t}`);
     }
     dockerArgs.push("--cpus=1.0");
@@ -75,15 +75,17 @@ async function dockerSpawn(
     }
     if (option.bindMount) {
         option.bindMount.forEach((ele) => {
-            const s = `type=${ele.type},source=${path.resolve(
+            const s = `type=${ele.type ?? "bind"},source=${path.resolve(
                 ele.source
-            )},target=${ele.destination}${ele.readonly ? ",readonly" : ""}`;
+            )},target=${ele.destination ?? ele.source}${
+                ele.readonly ?? true ? ",readonly" : ""
+            }`;
             dockerArgs.push(s);
         });
     }
     dockerArgs.push("08d22c0ceb15");
     args = [...dockerArgs, ...args];
-    await fs.unlink(cidPath);
+    await fs.unlink(cidPath).catch((err) => null);
     const process = spawn("/usr/bin/docke", args, basicOption);
     const cid = await backOff(async () => {
         const cid = (await fs.readFile(cidPath)).toString("utf-8");

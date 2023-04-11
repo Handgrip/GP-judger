@@ -40,7 +40,7 @@ export class Java extends Language {
                 bindMount: [
                     {
                         source: this.compileDir,
-                        mode: "rw",
+                        readonly: false,
                     },
                 ],
             },
@@ -75,7 +75,7 @@ export class Java extends Language {
                 bindMount: [
                     {
                         source: binPath,
-                        mode: "ro",
+                        readonly: true,
                     },
                 ],
                 memoryLimit: this.excutable.limit.runtime.memory * 2,

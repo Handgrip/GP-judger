@@ -1,7 +1,7 @@
 import path from "path";
 import { getConfig } from "../../Config";
 import { RunOption, Language, LanguageConfigureOption } from "./decl";
-import { MountOption } from "..";
+import { MountOption } from "../";
 
 export class CPP extends Language {
     private src = "src.cpp";
@@ -82,7 +82,7 @@ export class CPP extends Language {
                 bindMount: [
                     {
                         source: binPath,
-                        mode: "ro",
+                        readonly: true,
                     },
                 ],
             },

@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { configure, getLogger } from "log4js";
+import version from "./version";
 import { getConfig } from "./Config";
 import { getgid, getuid } from "process";
-import version from "./version";
 
 async function wait(ms: number) {
     return new Promise((resolve) => setTimeout(() => resolve(null), ms));

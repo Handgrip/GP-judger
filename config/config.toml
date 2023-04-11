@@ -1,0 +1,18 @@
+[self]
+judgeCapability = 4
+name = "TestJudger"
+[language]
+c = "/usr/bin/gcc"
+cpp = "/usr/bin/g++"
+testlib = "/testlib.h"
+python = "/usr/bin/python3"
+java = "/usr/bin/java"
+javac = "/usr/bin/javac"
+cat = "/usr/bin/cat"
+node = "/usr/bin/node"
+[judger]
+tmpdirBase = "/tmp/Heng_Client"
+timeRatioTolerance = 5
+defaultPidLimit = 64
+uid = 1999
+gid = 1999

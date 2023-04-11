@@ -1,0 +1,37 @@
+[controller]
+host = "http://localhost:8000/c"
+AccessKey = "ox00000000"
+SecrectKey = "0xffffffff"
+[self]
+judgeCapability = 4
+name = "TestJudger"
+[nsjail]
+path = "/usr/bin/nsjail"
+configFile = "./jailConfig.cfg"
+[hc]
+path = "/usr/bin/hc"
+[language]
+c = "/usr/bin/gcc"
+cpp = "/usr/bin/g++"
+testlib = "/testlib.h"
+python = "/usr/bin/python3"
+java = "/usr/bin/java"
+javac = "/usr/bin/javac"
+cat = "/usr/bin/cat"
+node = "/usr/bin/node"
+pascal = "/usr/bin/fpc"
+ojcmp = "/usr/bin/ojcmp"
+rustc = "/usr/bin/rustc"
+[judger]
+noSelfTestError = false
+tmpdirBase = "/tmp/Heng_Client"
+timeRatioTolerance = 5
+defaultPidLimit = 64
+defaultTimeRatio = 1
+selfTestRound = 5
+uid = 1999
+gid = 1999
+cacheUsr = false
+cacheSpj = true
+cacheInteractor = true
+remoteFileCacheBytes = 536870912

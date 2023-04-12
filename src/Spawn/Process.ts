@@ -1,10 +1,8 @@
-import { execFile, ChildProcess } from "child_process";
+import { execFile, ChildProcess, spawn } from "child_process";
 import fs from "fs/promises";
 import { getLogger } from "log4js";
 import path from "path";
 import { Usage } from "src/decl";
-
-const logger = getLogger("Process");
 
 const CgPath = "/sys/fs/cgroup";
 const DockerGroup = "docker";
@@ -15,64 +13,130 @@ enum SubSystem {
 enum CpuFileName {
     UsageUser = "cpuacct.usage_user",
     UsageSys = "cpuacct.usage_sys",
+    Task = "task",
 }
 
 enum MemoryFileName {
     MaxUsage = "memory.max_usage_in_bytes",
+    Task = "task",
 }
 
 export interface DockerProcess extends ChildProcess {
     readonly string: string;
     measure(): Promise<Usage>;
     terminal(): Promise<void>;
+    init(): Promise<void>;
+    sendSignal(signal: number): Promise<void>;
+    stop(): Promise<void>;
+    cont(): Promise<void>;
+    killSidecar(): void;
+    rmCgroup(): Promise<void>;
+    clean(): Promise<void>;
 }
 
 export class DockerHelper {
-    constructor(readonly cid: string) {}
+    private sidecarPid = -1;
+    private readonly logger;
+    exited: Promise<void>;
+    private
+
+    constructor(
+        private readonly childProcess: ChildProcess,
+        readonly cid: string
+    ) {
+        this.logger = getLogger(`Helper ${this.cid.substring(0, 8)}`);
+        process.on("error", (err) => {
+            this.logger.error(err);
+        });
+        this.exited = new Promise((resolve) => {
+            this.childProcess.on("exit", () => {
+                resolve();
+            });
+        });
+    }
+    async init(): Promise<void> {
+        const sideProcess = spawn("/usr/bin/sleep", ["1000"]);
+        sideProcess.on("error", (err) => {
+            this.logger.error(err);
+        });
+        this.sidecarPid = sideProcess.pid;
+        try {
+            await fs.writeFile(
+                path.join(
+                    CgPath,
+                    SubSystem.Memory,
+                    DockerGroup,
+                    this.cid,
+                    MemoryFileName.Task
+                ),
+                this.sidecarPid.toString()
+            );
+            await fs.writeFile(
+                path.join(
+                    CgPath,
+                    SubSystem.Cpu,
+                    DockerGroup,
+                    this.cid,
+                    CpuFileName.Task
+                ),
+                this.sidecarPid.toString()
+            );
+        } catch (err) {
+            this.logger.error(`launch sidecar failed`);
+            this.killSidecar();
+        }
+    }
     async measure(): Promise<Usage> {
-        const memory = parseInt(
-            (
-                await fs.readFile(
-                    path.join(
-                        CgPath,
-                        SubSystem.Memory,
-                        DockerGroup,
-                        this.cid,
-                        MemoryFileName.MaxUsage
-                    )
-                )
-            ).toString("utf-8")
-        );
-        const usr = Math.floor(
-            parseInt(
+        let memory = 2147483647,
+            usr = 2147483647,
+            sys = 2147483647;
+        try {
+            memory = parseInt(
                 (
                     await fs.readFile(
                         path.join(
                             CgPath,
-                            SubSystem.Cpu,
+                            SubSystem.Memory,
                             DockerGroup,
                             this.cid,
-                            CpuFileName.UsageUser
+                            MemoryFileName.MaxUsage
                         )
                     )
                 ).toString("utf-8")
-            ) / 1000000
-        );
-        const sys = Math.floor(
-            parseInt(
-                (
-                    await fs.readFile(
-                        path.join(
-                            CgPath,
-                            SubSystem.Cpu,
-                            DockerGroup,
-                            this.cid,
-                            CpuFileName.UsageSys
+            );
+            usr = Math.floor(
+                parseInt(
+                    (
+                        await fs.readFile(
+                            path.join(
+                                CgPath,
+                                SubSystem.Cpu,
+                                DockerGroup,
+                                this.cid,
+                                CpuFileName.UsageUser
+                            )
                         )
-                    )
-                ).toString("utf-8")
-            ) / 1000000
-        );
+                    ).toString("utf-8")
+                ) / 1000000
+            );
+            sys = Math.floor(
+                parseInt(
+                    (
+                        await fs.readFile(
+                            path.join(
+                                CgPath,
+                                SubSystem.Cpu,
+                                DockerGroup,
+                                this.cid,
+                                CpuFileName.UsageSys
+                            )
+                        )
+                    ).toString("utf-8")
+                ) / 1000000
+            );
+        } catch (err) {
+            this.logger.error(err);
+        }
         return {
             memory: memory,
             time: {
@@ -82,19 +146,21 @@ export class DockerHelper {
             },
         };
     }
-    async sendSignal(signal: number = 9): Promise<void> {
+    async sendSignal(signal: number): Promise<void> {
         try {
             await new Promise((resolve, reject) => {
                 execFile(
                     "/usr/bin/docker",
                     ["kill", `--signal=${signal}`, this.cid],
                     (error, stdout, stderr) => {
-                        if (error) reject(error);
+                        if (error) {
+                            reject(error);
+                        }
                         if (stderr) {
-                            logger.warn(stderr);
+                            this.logger.warn(stderr);
                         }
                         if (stdout.indexOf(this.cid) == -1) {
-                            logger.warn(stdout);
+                            this.logger.warn(stdout);
                             reject(new Error(`kill ${this.cid} failed`));
                         }
                         resolve(0);
@@ -102,17 +168,40 @@ export class DockerHelper {
                 );
             });
         } catch (err) {
-            logger.error(err);
+            this.logger.error(err);
         }
     }
 
     terminal(): Promise<void> {
         return this.sendSignal(9);
     }
-    stop() {
+    stop(): Promise<void> {
         return this.sendSignal(19);
     }
-    cont() {
+    cont(): Promise<void> {
         return this.sendSignal(18);
+    }
+    killSidecar(): void {
+        if (this.sidecarPid > 0) {
+            process.kill(this.sidecarPid, 9);
+            this.sidecarPid = 0;
+        }
+    }
+
+    async rmCgroup(): Promise<void> {
+        await fs.rmdir(path.join(CgPath, SubSystem.Cpu, DockerGroup, this.cid));
+        await fs.rmdir(
+            path.join(CgPath, SubSystem.Memory, DockerGroup, this.cid)
+        );
+    }
+
+    async clean(): Promise<void> {
+        try {
+            await this.terminal();
+            this.killSidecar();
+            await this.rmCgroup();
+        } catch (err) {
+            this.logger.error(err);
+        }
     }
 }

@@ -1,5 +1,3 @@
-export type GamerNo = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-export type UserNo = "judger" | GamerNo;
 export interface Limit {
     time: number;
     memory: number;
@@ -9,7 +7,7 @@ export interface Code {
     source: string;
     limit: Limit;
 }
-export type Game = Record<UserNo, Code>;
+export type Game = Partial<Record<string, Code>>;
 export interface TimeUsage {
     usr: number;
     sys: number;
@@ -26,9 +24,11 @@ export type CompileSingleResult = Usage & {
 };
 export type JudgerRoundSummary = UsageVerdict & { output: FromJudger };
 export type SingleGamerRoundSummary = UsageVerdict;
-export type GamerRoundSummary = Record<GamerNo, SingleGamerRoundSummary>;
+export type GamerRoundSummary = Partial<
+    Partial<Record<string, SingleGamerRoundSummary>>
+>;
 export interface GameResult {
-    complie: Record<UserNo, CompileSingleResult>;
+    complie: Partial<Record<string, CompileSingleResult>>;
     round: (JudgerRoundSummary | GamerRoundSummary)[];
 }
 export type Verdict = "OK" | "TLE" | "MLE" | "NJ" | "RE" | "CE" | "SE";
@@ -42,5 +42,5 @@ export interface ToJudger {
 export interface FromJudger {
     command: "request" | "finish";
     display: string;
-    content: Record<string, string | number>;
+    content: Partial<Record<string, string | number>>;
 }

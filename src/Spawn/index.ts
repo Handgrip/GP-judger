@@ -5,6 +5,8 @@ import { CompleteStdioOptions } from "./BasicSpawn";
 import { spawn } from "child_process";
 import { backOff } from "../Utilities/util";
 import { DockerHelper } from "./Process";
+import { getLogger } from "log4js";
+const logger = getLogger("Spawn");
 
 export interface MountOption {
     type?: "bind" | "tmpfs";
@@ -86,7 +88,10 @@ export async function dockerSpawn(
     dockerArgs.push("08d22c0ceb15");
     args = [...dockerArgs, ...args];
     await fs.unlink(cidPath).catch((err) => null);
-    const process = spawn("/usr/bin/docke", args, basicOption);
+    const process = spawn("/usr/bin/docker", args, basicOption);
+    process.on("error", (err) => {
+        logger.error(err);
+    });
     const cid = await backOff(async () => {
         const cid = (await fs.readFile(cidPath)).toString("utf-8");
         if (cid.length !== 64) {
@@ -96,6 +101,8 @@ export async function dockerSpawn(
             throw new Error("cid file empty");
         }
     }, 500);
-    Object.assign(process, new DockerHelper(cid));
+    const helper = new DockerHelper(process, cid);
+    await helper.init();
+    Object.assign(process, helper);
     return process;
 }

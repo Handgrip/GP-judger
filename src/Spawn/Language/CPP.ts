@@ -24,24 +24,14 @@ export class CPP extends Language {
             path.join(this.compileDir, this.src),
             "-o",
             path.join(this.compileDir, this.bin),
-            this.excutable.environment.options?.version !== undefined
-                ? `--std=${this.excutable.environment.options.version}`
-                : "--std=c++17",
+            "--std=c++17",
         ];
         // default on
-        if (this.excutable.environment.options?.o2 !== false) {
-            compilerOptions.push("-O2");
-        } else {
-            compilerOptions.push("-O0");
-        }
+        compilerOptions.push("-O2");
         // default on
-        if (this.excutable.environment.options?.static !== false) {
-            compilerOptions.push("-static");
-        }
+        compilerOptions.push("-static");
         // default on
-        if (this.excutable.environment.options?.lm !== false) {
-            compilerOptions.push("-lm");
-        }
+        compilerOptions.push("-lm");
         const bindMount: MountOption[] = [
             {
                 source: this.compileDir,
@@ -51,14 +41,14 @@ export class CPP extends Language {
             },
         ];
         // default off
-        if (this.excutable.environment.options?.testlib === true) {
-            bindMount.push({
-                source: getConfig().language.testlib,
-                destination: path.join(this.compileDir, "testlib.h"),
-                type: "bind",
-                readonly: true,
-            });
-        }
+        // if (this.excutable.environment.options?.testlib === true) {
+        //     bindMount.push({
+        //         source: getConfig().language.testlib,
+        //         destination: path.join(this.compileDir, "testlib.h"),
+        //         type: "bind",
+        //         readonly: true,
+        //     });
+        // }
         return {
             skip: false,
             command: getConfig().language.cpp,

@@ -1,5 +1,8 @@
+import { getLogger } from "log4js";
+import { DockerProcess } from "../Spawn/Process";
 import { Readable } from "stream";
 import { StringDecoder } from "string_decoder";
+const logger = getLogger("File");
 
 export async function backOff<T>(
     fun: () => Promise<T>,
@@ -23,11 +26,12 @@ export function delay(ms: number): Promise<number> {
     });
 }
 export function getline(stream: Readable) {
+    // end?
     return new Promise<string>((resolve, reject) => {
+        let line = "";
         const callback = (err: Error) => reject(err);
         const onReadable = () => {
             let chunk;
-            let line = "";
             const decoder = new StringDecoder("utf-8");
             while (null !== (chunk = stream.read())) {
                 const str = decoder.write(chunk);
@@ -54,4 +58,13 @@ export function getline(stream: Readable) {
         stream.on("error", callback);
         stream.on("readable", onReadable);
     });
+}
+export function timeout(process: DockerProcess, ms: number): () => void {
+    let timer: NodeJS.Timer = setTimeout(() => {
+        logger.warn("timeout, killing");
+        process.terminal();
+    }, ms);
+    return () => {
+        clearTimeout(timer);
+    };
 }

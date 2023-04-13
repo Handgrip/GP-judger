@@ -1,15 +1,18 @@
 import * as crypto from "crypto";
-import { Executable } from "heng-protocol";
 import path from "path";
 import fs from "fs";
 import { Language } from "../Spawn/Language/decl";
-import { FileAgent } from "./File";
+import { FileAgent, readStream } from "./File";
 import { getConfig } from "../Config";
 import { CompleteStdioOptions } from "../Spawn/BasicSpawn";
 import { getConfiguredLanguage } from "../Spawn/Language";
 import { getLogger } from "log4js";
 import { FileHandle } from "fs/promises";
-import { SpawnOption, dockerSpawn } from "src/Spawn";
+import { SpawnOption, dockerSpawn } from "../Spawn";
+import { timeout } from "./util";
+import { Code, CompileSingleResult, Verdict } from "../decl";
+import { generateVerdict } from "../God";
+import { DockerProcess } from "../Spawn/Process";
 
 export const SourceCodeName = "srcCode";
 export const CompileLogName = "compile.log";
@@ -18,22 +21,20 @@ export const CompileStatisticName = "compile.statistic";
 export class ExecutableAgent {
     private readonly dirHash: string;
     readonly fileAgent: FileAgent;
-    private compiled = false; // whether compile in this instance
+    private compiled = false;
     readonly configuredLanguage: Language;
     private Initialized = 0;
     protected logger = getLogger("ExecutableAgent");
 
-    constructor(private readonly excutable: Executable) {
+    constructor(private readonly code: Code) {
         this.dirHash = crypto.randomBytes(32).toString("hex");
-        this.configuredLanguage = getConfiguredLanguage(
-            this.excutable.environment.language,
-            {
-                excutable: this.excutable,
-                compileDir: this.dirHash,
-            }
-        );
+        this.configuredLanguage = getConfiguredLanguage(this.code.language, {
+            excutable: this.code,
+            compileDir: this.dirHash,
+        });
 
         this.fileAgent = new FileAgent(path.join("bin", this.dirHash));
+        this.configuredLanguage.compileDir = this.fileAgent.dir;
     }
 
     /**
@@ -43,7 +44,7 @@ export class ExecutableAgent {
         await this.fileAgent.init();
         this.fileAgent.add(
             SourceCodeName,
-            this.excutable.source,
+            this.code.source,
             this.configuredLanguage.srcFileName
         );
         this.Initialized++;
@@ -67,7 +68,7 @@ export class ExecutableAgent {
         args?: string[],
         stdio?: CompleteStdioOptions,
         cwd?: string
-    ): Promise<MeterResult | void> {
+    ): Promise<CompileSingleResult | void> {
         this.checkInit();
         if (this.compiled) {
             this.logger.warn(`skip compile, compiled: ${this.compiled}`);
@@ -80,7 +81,8 @@ export class ExecutableAgent {
             this.compiled = true;
             return;
         }
-        let compileLogFileFH: FileHandle | undefined = undefined;
+        let compileLogFileFH: FileHandle | undefined = undefined,
+            subProc: DockerProcess | undefined = undefined;
         try {
             const command = languageRunOption.command;
             if (!args) {
@@ -114,43 +116,56 @@ export class ExecutableAgent {
                 gid: getConfig().judger.gid,
                 memoryLimit:
                     languageRunOption.spawnOption?.memoryLimit ??
-                    this.excutable.limit.compiler.memory,
+                    512 * 1024 * 1024,
                 pidLimit:
                     languageRunOption.spawnOption?.pidLimit ??
                     getConfig().judger.defaultPidLimit,
                 fileLimit:
                     languageRunOption.spawnOption?.fileLimit ??
-                    this.excutable.limit.compiler.output,
+                    128 * 1024 * 1024,
                 bindMount: languageRunOption.spawnOption?.bindMount,
             };
 
-            const subProc = dockerSpawn(command, args, spawnOption);
-            const procResult = await subProc.result;
+            subProc = await dockerSpawn(command, args, spawnOption);
+            const cancel = timeout(subProc, 10000);
+            await subProc.exitPromise;
+            cancel();
             await compileLogFileFH.close();
 
-            this.fileAgent.register(CompileLogName, CompileLogName);
+            const usage = await subProc.measure();
+            let verdict: Verdict = generateVerdict(
+                {
+                    time: 10000,
+                    memory: 1 * 1024 * 1024 * 1024,
+                },
+                usage,
+                subProc.exitCode
+            );
+            if (verdict === "NR") verdict = "OK";
+            const message = await readStream(
+                fs.createReadStream(compileLogPath, {
+                    encoding: "utf-8",
+                    end: 10 * 1024,
+                }),
+                -1
+            );
 
             try {
                 for (const file of this.configuredLanguage.compiledFiles) {
                     await fs.promises.access(file);
                 }
             } catch (error) {
-                procResult.returnCode = procResult.returnCode || 1;
+                verdict = "CE";
             }
 
-            const compileStatisticPath = path.resolve(
-                this.fileAgent.dir,
-                CompileStatisticName
-            );
-            await fs.promises.writeFile(
-                compileStatisticPath,
-                JSON.stringify(procResult),
-                { mode: 0o700 }
-            );
-            this.fileAgent.register(CompileStatisticName, CompileStatisticName);
             this.compiled = true;
-            return procResult;
+            return {
+                message,
+                ...usage,
+                verdict,
+            };
         } finally {
+            subProc && (await subProc.clean());
             compileLogFileFH && (await compileLogFileFH.close());
         }
     }
@@ -168,13 +183,13 @@ export class ExecutableAgent {
         cwd?: string,
         stdio?: CompleteStdioOptions,
         args?: string[]
-    ): Promise<MeteredChildProcess> {
+    ): Promise<DockerProcess> {
         this.checkInit();
         const languageRunOption = this.configuredLanguage.execOptionGenerator();
         if (languageRunOption.skip) {
             throw new Error("Can't skip exec");
         }
-        if (!this.compiled && !this.compileCached) {
+        if (!this.compiled) {
             throw new Error("Please compile first");
         } else {
             const command = languageRunOption.command;
@@ -185,7 +200,7 @@ export class ExecutableAgent {
                 args = [...languageRunOption.args, ...args];
             }
 
-            const spawnOption: HengSpawnOption = {
+            const spawnOption: SpawnOption = {
                 cwd:
                     languageRunOption.spawnOption?.cwd ??
                     cwd ??
@@ -194,24 +209,19 @@ export class ExecutableAgent {
                 stdio: stdio,
                 uid: getConfig().judger.uid,
                 gid: getConfig().judger.gid,
-                timeLimit:
-                    languageRunOption.spawnOption?.timeLimit ??
-                    this.excutable.limit.runtime.cpuTime,
                 memoryLimit:
                     languageRunOption.spawnOption?.memoryLimit ??
-                    this.excutable.limit.runtime.memory,
+                    this.code.limit.memory,
                 pidLimit:
                     languageRunOption.spawnOption?.pidLimit ??
                     getConfig().judger.defaultPidLimit,
                 fileLimit:
                     languageRunOption.spawnOption?.fileLimit ??
-                    this.excutable.limit.runtime.output,
-                tmpfsMount: languageRunOption.spawnOption?.tmpfsMount,
+                    128 * 1024 * 1024,
                 bindMount: languageRunOption.spawnOption?.bindMount,
-                symlink: languageRunOption.spawnOption?.symlink,
             };
 
-            const subProc = hengSpawn(command, args, spawnOption);
+            const subProc = dockerSpawn(command, args, spawnOption);
             return subProc;
         }
     }

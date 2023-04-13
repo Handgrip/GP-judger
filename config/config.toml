@@ -8,11 +8,9 @@ testlib = "/testlib.h"
 python = "/usr/bin/python3"
 java = "/usr/bin/java"
 javac = "/usr/bin/javac"
-cat = "/usr/bin/cat"
 node = "/usr/bin/node"
 [judger]
-tmpdirBase = "/tmp/Heng_Client"
-timeRatioTolerance = 5
+tmpdirBase = "/tmp/GP"
 defaultPidLimit = 64
 uid = 1999
 gid = 1999

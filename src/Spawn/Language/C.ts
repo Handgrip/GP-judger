@@ -23,24 +23,15 @@ export class C extends Language {
             path.join(this.compileDir, this.src),
             "-o",
             path.join(this.compileDir, this.bin),
-            this.excutable.environment.options?.version !== undefined
-                ? `--std=${this.excutable.environment.options.version}`
-                : "--std=c99",
+            "--std=c99",
         ];
         // default on
-        if (this.excutable.environment.options?.o2 !== false) {
-            compilerOptions.push("-O2");
-        } else {
-            compilerOptions.push("-O0");
-        }
+        compilerOptions.push("-O2");
+
         // default on
-        if (this.excutable.environment.options?.static !== false) {
-            compilerOptions.push("-static");
-        }
+        compilerOptions.push("-static");
         // default on
-        if (this.excutable.environment.options?.lm !== false) {
-            compilerOptions.push("-lm");
-        }
+        compilerOptions.push("-lm");
         return {
             skip: false,
             command: getConfig().language.c,

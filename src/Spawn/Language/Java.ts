@@ -9,14 +9,6 @@ export class Java extends Language {
 
     constructor(option: LanguageConfigureOption) {
         super(option);
-        if (
-            this.excutable.environment.options?.className &&
-            typeof this.excutable.environment.options?.className === "string"
-        ) {
-            this.className = this.excutable.environment.options?.className;
-            this.src = this.excutable.environment.options?.className + ".java";
-            this.bin = this.excutable.environment.options?.className + ".class";
-        }
     }
 
     get compileCacheable(): boolean {
@@ -55,14 +47,12 @@ export class Java extends Language {
         const binPath = path.join(this.compileDir, this.bin);
         const args: string[] = [];
         args.push(
-            this.excutable.environment.options?.stackSize
-                ? `-Xss${this.excutable.environment.options.stackSize}k`
-                : "-Xss256k",
+            "-Xss256k",
             `-Xms${Math.ceil(
-                (this.excutable.limit.runtime.memory * 1.5) / 1024 / 1024 / 4
+                (this.excutable.limit.memory * 1.5) / 1024 / 1024 / 4
             )}m`,
             `-Xmx${Math.ceil(
-                (this.excutable.limit.runtime.memory * 1.5) / 1024 / 1024
+                (this.excutable.limit.memory * 1.5) / 1024 / 1024
             )}m`
         );
         args.push("-classpath", this.compileDir);
@@ -78,7 +68,7 @@ export class Java extends Language {
                         readonly: true,
                     },
                 ],
-                memoryLimit: this.excutable.limit.runtime.memory * 2,
+                memoryLimit: this.excutable.limit.memory * 2,
             },
         };
     }

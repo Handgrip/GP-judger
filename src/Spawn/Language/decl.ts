@@ -1,6 +1,5 @@
-import { Executable } from "heng-protocol";
+import { Code } from "../../decl";
 import { SpawnOption } from "../";
-
 
 // Extract from SpawnOption
 export type RunOption =
@@ -13,12 +12,12 @@ export type RunOption =
       };
 
 export interface LanguageConfigureOption {
-    excutable: Executable;
+    excutable: Code;
     compileDir: string;
 }
 
 export abstract class Language {
-    readonly excutable: Executable;
+    readonly excutable: Code;
     compileDir: string;
     constructor(option: LanguageConfigureOption) {
         this.excutable = option.excutable;

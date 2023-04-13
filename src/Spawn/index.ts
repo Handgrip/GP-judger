@@ -4,7 +4,7 @@ import os from "os";
 import { CompleteStdioOptions } from "./BasicSpawn";
 import { spawn } from "child_process";
 import { backOff } from "../Utilities/util";
-import { DockerHelper } from "./Process";
+import { DockerHelper, DockerProcess } from "./Process";
 import { getLogger } from "log4js";
 const logger = getLogger("Spawn");
 
@@ -31,7 +31,7 @@ export async function dockerSpawn(
     command: string,
     args: string[],
     option: SpawnOption
-) {
+): Promise<DockerProcess> {
     const cidPath = path.join(os.tmpdir(), Math.random().toString());
     const basicOption = {
         stdio: option.stdio,
@@ -39,27 +39,31 @@ export async function dockerSpawn(
     const dockerArgs = [];
     dockerArgs.push("run");
     dockerArgs.push("--rm");
-    dockerArgs.push("--attach");
+    dockerArgs.push("-i");
+    dockerArgs.push("--attach=STDIN");
+    dockerArgs.push("--attach=STDOUT");
+    dockerArgs.push("--attach=STDERR");
     dockerArgs.push("--init");
+    dockerArgs.push("--pull=never");
     dockerArgs.push("--stop-timeout=0");
     dockerArgs.push(`--cidfile=${cidPath}`);
     dockerArgs.push("--network=none");
     dockerArgs.push(`--entrypoint=${command}`);
     if (option.memoryLimit) {
-        dockerArgs.push(`--memory=${option.memoryLimit}`);
-        dockerArgs.push(`--memory-swap=${option.memoryLimit}`);
-        dockerArgs.push("--memory-swappiness=0");
+        // dockerArgs.push(`--memory=${option.memoryLimit}`);
+        // dockerArgs.push(`--memory-swap=${option.memoryLimit}`);
+        // dockerArgs.push("--memory-swappiness=0");
     }
     if (option.pidLimit) {
         dockerArgs.push(`--pids-limit=${option.pidLimit}`);
     }
     if (option.fileLimit) {
-        const t = Math.ceil(option.fileLimit / 1024 / 1024);
-        dockerArgs.push("--ulimit", `FSIZE=${t}:${t}`);
+        const t = option.fileLimit;
+        dockerArgs.push("--ulimit", `fsize=${t}:${t}`);
     }
     dockerArgs.push("--cpus=1.0");
-    dockerArgs.push("--ulimit", `CPU=soft:soft`);
-    dockerArgs.push("--ulimit", `STACK=64:64`);
+    dockerArgs.push("--ulimit", `cpu=1000:1000`);
+    dockerArgs.push("--ulimit", `stack=65536:65536`);
     if (option.uid) {
         let s = `--user=${option.uid}`;
         if (option.gid) {
@@ -82,10 +86,10 @@ export async function dockerSpawn(
             )},target=${ele.destination ?? ele.source}${
                 ele.readonly ?? true ? ",readonly" : ""
             }`;
-            dockerArgs.push(s);
+            dockerArgs.push("--mount", s);
         });
     }
-    dockerArgs.push("08d22c0ceb15");
+    dockerArgs.push("18ebe01e99d2");
     args = [...dockerArgs, ...args];
     await fs.unlink(cidPath).catch((err) => null);
     const process = spawn("/usr/bin/docker", args, basicOption);
@@ -94,7 +98,7 @@ export async function dockerSpawn(
     });
     const cid = await backOff(async () => {
         const cid = (await fs.readFile(cidPath)).toString("utf-8");
-        if (cid.length !== 64) {
+        if (cid.length === 64) {
             await fs.unlink(cidPath);
             return cid;
         } else {
@@ -104,5 +108,5 @@ export async function dockerSpawn(
     const helper = new DockerHelper(process, cid);
     await helper.init();
     Object.assign(process, helper);
-    return process;
+    return process as DockerProcess;
 }

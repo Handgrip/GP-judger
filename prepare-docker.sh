@@ -6,6 +6,8 @@ sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /
 
 dnf update --assumeyes
 
+curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+
 pkgs="autoconf \
 bison \
 flex \
@@ -14,22 +16,20 @@ gcc-c++ \
 libstdc++ \
 libstdc++-static \
 glibc-static \
-git \
 libtool \
 make \
 pkg-config \
 protobuf-devel \
 protobuf-compiler \
-git \
-wget \
 java-1.8.0-openjdk \
 java-1.8.0-openjdk-devel \
 python3 \
-libnl3-devel"
+libnl3-devel \
+nodejs"
 
 dnf install --enablerepo=PowerTools --assumeyes $pkgs || dnf install --enablerepo=powertools --assumeyes $pkgs
 
-dnf module --assumeyes install nodejs:14
+mkdir /usr/local/lib/GP/nlohmann -p && curl 'https://github.com/nlohmann/json/releases/latest/download/json.hpp' -L -o /usr/local/lib/GP/nlohmann/json.hpp
 
 dnf clean all
 rm -rf /var/cache/yum

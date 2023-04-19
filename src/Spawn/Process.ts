@@ -209,12 +209,16 @@ export class DockerHelper {
 
     rmCgroup = async (): Promise<void> => {
         await fs
-            .rmdir(path.join(CgPath, SubSystem.Cpu, DockerGroup, this.cid))
+            .rm(path.join(CgPath, SubSystem.Cpu, DockerGroup, this.cid), {
+                recursive: true,
+            })
             .catch((err) => {
                 this.logger.error(err);
             });
         await fs
-            .rmdir(path.join(CgPath, SubSystem.Memory, DockerGroup, this.cid))
+            .rm(path.join(CgPath, SubSystem.Memory, DockerGroup, this.cid), {
+                recursive: true,
+            })
             .catch((err) => {
                 this.logger.error(err);
             });

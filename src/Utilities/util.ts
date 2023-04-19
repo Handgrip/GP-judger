@@ -2,7 +2,7 @@ import { getLogger } from "log4js";
 import { DockerProcess } from "../Spawn/Process";
 import { Readable } from "stream";
 import { StringDecoder } from "string_decoder";
-const logger = getLogger("File");
+const logger = getLogger("Util");
 
 export async function backOff<T>(
     fun: () => Promise<T>,
@@ -25,6 +25,8 @@ export function delay(ms: number): Promise<number> {
         setTimeout(() => resolve(0), ms);
     });
 }
+
+/** @deprecated */
 export function getline(stream: Readable) {
     // end?
     return new Promise<string>((resolve, reject) => {

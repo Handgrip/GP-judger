@@ -217,6 +217,6 @@ export class FileAgent {
         }
     }
     async clean(): Promise<void> {
-        return await fs.promises.rmdir(this.dir, { recursive: true });
+        return await fs.promises.rm(this.dir, { recursive: true });
     }
 }

@@ -32,6 +32,7 @@ export class CPP extends Language {
         compilerOptions.push("-static");
         // default on
         compilerOptions.push("-lm");
+        compilerOptions.push("-I/usr/local/lib/GP");
         const bindMount: MountOption[] = [
             {
                 source: this.compileDir,

@@ -1,7 +1,7 @@
 import { DockerProcess } from "./Spawn/Process";
 import { ExecutableAgent } from "./Utilities/ExecutableAgent";
 import { ReadLine } from "./Utilities/ReadLine";
-import { getline, timeout } from "./Utilities/util";
+import { timeout } from "./Utilities/util";
 import {
     CompileSingleResult,
     FromJudger,
@@ -71,9 +71,6 @@ export class God {
                 }
             }
             for (let toJudger: ToJudger = {}, roundCount = 1; ; roundCount++) {
-                if (roundCount >= 100) {
-                    throw new Error("too much round");
-                }
                 const judger = processDict["judger"];
                 const judgerRl = readlineDict["judger"];
                 let fromJudger: FromJudger = {
@@ -139,6 +136,9 @@ export class God {
                 }
 
                 if (fromJudger.command === "request") {
+                    if (roundCount >= 100) {
+                        throw new Error("too much round");
+                    }
                     toJudger = {};
                     const gamerSummary: GamerRoundSummary = {};
                     for (const key in fromJudger.content) {

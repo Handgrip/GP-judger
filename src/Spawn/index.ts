@@ -50,9 +50,9 @@ export async function dockerSpawn(
     dockerArgs.push("--network=none");
     dockerArgs.push(`--entrypoint=${command}`);
     if (option.memoryLimit) {
-        // dockerArgs.push(`--memory=${option.memoryLimit}`);
-        // dockerArgs.push(`--memory-swap=${option.memoryLimit}`);
-        // dockerArgs.push("--memory-swappiness=0");
+        dockerArgs.push(`--memory=${option.memoryLimit}`);
+        dockerArgs.push(`--memory-swap=${option.memoryLimit}`);
+        dockerArgs.push("--memory-swappiness=0");
     }
     if (option.pidLimit) {
         dockerArgs.push(`--pids-limit=${option.pidLimit}`);
@@ -63,7 +63,7 @@ export async function dockerSpawn(
     }
     dockerArgs.push("--cpus=1.0");
     dockerArgs.push("--ulimit", `cpu=1000:1000`);
-    dockerArgs.push("--ulimit", `stack=65536:65536`);
+    dockerArgs.push("--ulimit", `stack=67108864:67108864`);
     if (option.uid) {
         let s = `--user=${option.uid}`;
         if (option.gid) {
@@ -89,7 +89,7 @@ export async function dockerSpawn(
             dockerArgs.push("--mount", s);
         });
     }
-    dockerArgs.push("18ebe01e99d2");
+    dockerArgs.push("026b9ec156a6");
     args = [...dockerArgs, ...args];
     await fs.unlink(cidPath).catch((err) => null);
     const process = spawn("/usr/bin/docker", args, basicOption);

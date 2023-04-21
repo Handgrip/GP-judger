@@ -26,6 +26,8 @@ export interface DockerProcess extends ChildProcess {
     readonly string: string;
     exitPromise: Promise<void>;
     measure(): Promise<Usage>;
+    getLastUsage(): Usage | undefined;
+    measureAndLast(): Promise<[Usage, Usage | undefined]>;
     terminal(): Promise<void>;
     init(): Promise<void>;
     sendSignal(signal: number): Promise<void>;
@@ -41,6 +43,7 @@ export class DockerHelper {
     private readonly logger;
     exitPromise: Promise<void>;
     private startTime: number;
+    private lastUsage: Usage | undefined;
 
     constructor(
         private readonly childProcess: ChildProcess,
@@ -154,7 +157,7 @@ export class DockerHelper {
             this.logger.error(err);
         }
 
-        return {
+        const usage: Usage = {
             memory: memory,
             time: {
                 usr: usr,
@@ -162,6 +165,15 @@ export class DockerHelper {
                 real: Date.now() - this.startTime,
             },
         };
+        this.lastUsage = usage;
+        return usage;
+    };
+    getLastUsage = (): Usage | undefined => {
+        return this.lastUsage;
+    };
+    measureAndLast = async (): Promise<[Usage, Usage | undefined]> => {
+        const last = this.getLastUsage();
+        return [await this.measure(), last];
     };
     sendSignal = async (signal: number): Promise<void> => {
         try {

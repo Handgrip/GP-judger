@@ -139,6 +139,7 @@ export class ExecutableAgent {
                     memory: 1 * 1024 * 1024 * 1024,
                 },
                 usage,
+                null,
                 subProc.exitCode
             );
             if (verdict === "NR") verdict = "OK";

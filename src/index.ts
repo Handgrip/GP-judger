@@ -118,7 +118,7 @@ async function main() {
                         x = -1,
                         y = -1;
                     
-                    function gamerWin(gamerNo, reason) {
+                    function gamerWin(gamerNo, error) {
                         const content = {};
                         Reflect.set(content, String(gamerNo & 1), 1);
                         Reflect.set(content, String((gamerNo & 1) ^ 1), 0);
@@ -131,7 +131,7 @@ async function main() {
                                     x,
                                     y,
                                     winner: gamerNo,
-                                    reason,
+                                    error,
                                     map,
                                 }),
                                 content: content,
@@ -166,7 +166,7 @@ async function main() {
                                 gamerOperation.verdict !== "OK" ||
                                 typeof gamerOperation.raw !== "string"
                             ) {
-                                gamerWin(curGamer ^ 1, "对手不堪重负");
+                                gamerWin(curGamer ^ 1, "异常退出");
                                 break;
                             }
                             [x, y] = String(gamerOperation.raw)
@@ -175,12 +175,12 @@ async function main() {
                             if (!Number.isInteger(x)) x = 0;
                             if (!Number.isInteger(y)) y = 0;
                             if (!isOk(x, y)) {
-                                gamerWin(curGamer ^ 1, "对手落点违规");
+                                gamerWin(curGamer ^ 1, "落点违规");
                                 break;
                             }
                             map[x][y] = curGamer;
                             if (isEnd()) {
-                                gamerWin(curGamer, "五子连珠");
+                                gamerWin(curGamer, "");
                                 break;
                             }
                             gamerRequest(curGamer ^ 1, \`\${x} \${y}\`);

@@ -20,15 +20,27 @@ const logger = getLogger(`God`);
 export function generateVerdict(
     limit: Limit,
     usage: Usage,
+    lastUsage: Usage | null,
     exitCode: number | null
 ): Verdict {
-    logger.log(String(exitCode));
-    if (usage.memory > limit.memory) return "MLE";
-    if (usage.time.usr + usage.time.sys > limit.time) return "TLE";
-    if (exitCode !== null) {
-        if (exitCode !== 0) return "RE";
-        else return "NR";
+    if (usage.memory > limit.memory) {
+        return "MLE";
     }
+
+    let lastTime = 0;
+    if (lastUsage) {
+        lastTime = lastUsage.time.usr + lastUsage.time.sys;
+    }
+    if (usage.time.usr + usage.time.sys - lastTime > limit.time) return "TLE";
+
+    if (exitCode !== null) {
+        if (exitCode !== 0) {
+            return "RE";
+        } else {
+            return "NR";
+        }
+    }
+
     return "OK";
 }
 
@@ -41,6 +53,7 @@ export class God {
         const readlineDict: Record<string, ReadLine> = {};
         const roundSummary: (JudgerRoundSummary | GamerRoundSummary)[] = [];
         const gamerVerdict: Record<string, Verdict> = {};
+        const processLastUsage: Record<string, Usage> = {};
 
         try {
             // complie
@@ -114,10 +127,11 @@ export class God {
                     await judger.terminal();
                     throw err;
                 } finally {
-                    const usage = await judger.measure();
+                    const [usage, lastUsage] = await judger.measureAndLast();
                     const verdict = generateVerdict(
                         this.codes["judger"].limit,
                         usage,
+                        lastUsage ?? null,
                         judger.exitCode
                     );
                     const judgerSummary: JudgerRoundSummary = {
@@ -181,10 +195,12 @@ export class God {
                                 logger.error(err);
                                 await gamer.terminal();
                             } finally {
-                                const usage = await gamer.measure();
+                                const [usage, lastUsage] =
+                                    await gamer.measureAndLast();
                                 const verdict = generateVerdict(
                                     this.codes[key].limit,
                                     usage,
+                                    lastUsage ?? null,
                                     gamer.exitCode
                                 );
                                 toJudger[key] = {

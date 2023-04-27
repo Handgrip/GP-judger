@@ -116,18 +116,21 @@ export class ExecutableAgent {
                 gid: getConfig().judger.gid,
                 memoryLimit:
                     languageRunOption.spawnOption?.memoryLimit ??
-                    512 * 1024 * 1024,
+                    getConfig().judger.compileMemoryLimit,
                 pidLimit:
                     languageRunOption.spawnOption?.pidLimit ??
                     getConfig().judger.defaultPidLimit,
                 fileLimit:
                     languageRunOption.spawnOption?.fileLimit ??
-                    128 * 1024 * 1024,
+                    getConfig().judger.fileLimit,
                 bindMount: languageRunOption.spawnOption?.bindMount,
             };
 
             subProc = await dockerSpawn(command, args, spawnOption);
-            const cancel = timeout(subProc, 10000);
+            const cancel = timeout(
+                subProc,
+                getConfig().judger.compileTimeLimit
+            );
             await subProc.exitPromise;
             cancel();
             await compileLogFileFH.close();
@@ -135,8 +138,8 @@ export class ExecutableAgent {
             const usage = await subProc.measure();
             let verdict: Verdict = generateVerdict(
                 {
-                    time: 10000,
-                    memory: 1 * 1024 * 1024 * 1024,
+                    time: getConfig().judger.compileTimeLimit,
+                    memory: getConfig().judger.compileMemoryLimit,
                 },
                 usage,
                 null,
@@ -218,7 +221,7 @@ export class ExecutableAgent {
                     getConfig().judger.defaultPidLimit,
                 fileLimit:
                     languageRunOption.spawnOption?.fileLimit ??
-                    128 * 1024 * 1024,
+                    getConfig().judger.fileLimit,
                 bindMount: languageRunOption.spawnOption?.bindMount,
             };
 

@@ -31,7 +31,7 @@ dnf install --enablerepo=PowerTools --assumeyes $pkgs || dnf install --enablerep
 
 mkdir /usr/local/lib/GP/nlohmann -p && curl 'https://github.com/nlohmann/json/releases/latest/download/json.hpp' -L -o /usr/local/lib/GP/nlohmann/json.hpp
 
-pip install numpy scipy --system
+python3 -m pip install --no-cache-dir numpy scipy
 
 dnf clean all
 rm -rf /var/cache/yum

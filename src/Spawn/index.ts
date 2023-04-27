@@ -6,6 +6,7 @@ import { spawn } from "child_process";
 import { backOff } from "../Utilities/util";
 import { DockerHelper, DockerProcess } from "./Process";
 import { getLogger } from "log4js";
+import { getConfig } from "src/Config";
 const logger = getLogger("Spawn");
 
 export interface MountOption {
@@ -62,7 +63,9 @@ export async function dockerSpawn(
         dockerArgs.push("--ulimit", `fsize=${t}:${t}`);
     }
     dockerArgs.push("--cpus=1.0");
+    // second
     dockerArgs.push("--ulimit", `cpu=1000:1000`);
+    // stack 64M
     dockerArgs.push("--ulimit", `stack=67108864:67108864`);
     if (option.uid) {
         let s = `--user=${option.uid}`;
@@ -89,10 +92,10 @@ export async function dockerSpawn(
             dockerArgs.push("--mount", s);
         });
     }
-    dockerArgs.push("026b9ec156a6");
+    dockerArgs.push(getConfig().judger.imageId);
     args = [...dockerArgs, ...args];
     await fs.unlink(cidPath).catch((err) => null);
-    const process = spawn("/usr/bin/docker", args, basicOption);
+    const process = spawn(getConfig().judger.docker, args, basicOption);
     process.on("error", (err) => {
         logger.error(err);
     });

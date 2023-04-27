@@ -4,13 +4,17 @@ name = "TestJudger"
 [language]
 c = "/usr/bin/gcc"
 cpp = "/usr/bin/g++"
-testlib = "/testlib.h"
 python = "/usr/bin/python3"
 java = "/usr/bin/java"
 javac = "/usr/bin/javac"
 node = "/usr/bin/node"
 [judger]
+docker = "/usr/bin/docker"
 tmpdirBase = "/tmp/GP"
 defaultPidLimit = 64
 uid = 1999
 gid = 1999
+imageId = "5c802da8a161"
+compileMemoryLimit = 536870912
+compileTimeLimit = 10000
+fileLimit = 134217728

@@ -8,6 +8,7 @@ import {
     IsOptional,
     IsPositive,
     IsString,
+    Max,
     Min,
     ValidateNested,
     validateSync,
@@ -23,9 +24,6 @@ export class LanguageConfig {
     @IsString()
     @IsNotEmpty()
     cpp!: string;
-    @IsString()
-    @IsNotEmpty()
-    testlib!: string;
     @IsString()
     @IsNotEmpty()
     python!: string;
@@ -53,6 +51,9 @@ export class SelfConfig {
 export class JudgeFactoryConfig {
     @IsString()
     @IsNotEmpty()
+    docker!: string;
+    @IsString()
+    @IsNotEmpty()
     tmpdirBase!: string;
     @IsInt()
     @IsPositive()
@@ -63,6 +64,21 @@ export class JudgeFactoryConfig {
     @IsInt()
     @Min(1000)
     gid!: number;
+    @IsString()
+    @IsNotEmpty()
+    imageId!: string;
+    @IsInt()
+    @Min(8388608)
+    @Max(2147483648)
+    compileMemoryLimit!: number;
+    @IsInt()
+    @Min(100)
+    @Max(60000)
+    compileTimeLimit!: number;
+    @IsInt()
+    @Min(8388608)
+    @Max(2147483648)
+    fileLimit!: number;
 }
 export class Config {
     @ValidateNested()

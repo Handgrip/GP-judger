@@ -53,7 +53,6 @@ export class God {
         const readlineDict: Record<string, ReadLine> = {};
         const roundSummary: (JudgerRoundSummary | GamerRoundSummary)[] = [];
         const gamerVerdict: Record<string, Verdict> = {};
-        const processLastUsage: Record<string, Usage> = {};
 
         try {
             // complie
@@ -73,7 +72,6 @@ export class God {
             // run
             for (const key in executableDict) {
                 const agent = executableDict[key];
-                console.log(`run ${key}`);
                 const process = await agent.exec();
                 processDict[key] = process;
                 const out = process.stdout;
@@ -104,18 +102,12 @@ export class God {
                         judger,
                         this.codes["judger"].limit.time
                     );
-                    console.log("judge");
                     await judger.cont();
-                    console.log("judge1");
                     if (roundCount > 1) {
                         judger.stdin.write(JSON.stringify(toJudger) + "\n");
                     }
-                    console.log("judge2");
                     fromJudger = JSON.parse(await judgerRl.getLine());
-                    console.log("judge3");
-                    console.log(JSON.stringify(fromJudger));
                     await judger.stop();
-                    console.log("judge4");
                     cancel();
 
                     // validate
@@ -174,21 +166,17 @@ export class God {
                                         `gamer ${key} status error`
                                     );
                                 }
-                                console.log("judge5");
                                 let s = fromJudger.content[key] as string;
                                 if (!s.endsWith("\n")) {
                                     s += "\n";
                                 }
-                                console.log("judge6");
                                 const cancel = timeout(
                                     gamer,
                                     this.codes[key].limit.time
                                 );
                                 await gamer.cont();
-                                console.log("judge7", s);
                                 gamer.stdin.write(s);
                                 raw = await gamerRl.getLine();
-                                console.log("judge8");
                                 await gamer.stop();
                                 cancel();
                             } catch (err) {
@@ -231,7 +219,7 @@ export class God {
             for (const key in processDict) {
                 const process = processDict[key];
                 if (process) {
-                    process.clean();
+                    await process.clean();
                 }
             }
             for (const key in executableDict) {

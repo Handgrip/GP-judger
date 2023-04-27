@@ -1,6 +1,9 @@
 import { Writable } from "stream";
 
+// may replaced by node:readline/promise node:17
 export class ReadLine extends Writable {
+    closed: boolean = false;
+    errored: boolean = false;
     lines: string[] = [];
     lastline: string | undefined = undefined;
     consumer:
@@ -13,6 +16,12 @@ export class ReadLine extends Writable {
     constructor() {
         super({
             decodeStrings: false,
+        });
+        this.on("close", () => {
+            this.closed = true;
+        });
+        this.on("error", (err) => {
+            this.errored = true;
         });
     }
     _write(
@@ -29,7 +38,6 @@ export class ReadLine extends Writable {
         if (chunk instanceof Buffer) {
             chunk = chunk.toString("utf-8");
         }
-        console.log("solve data", chunk);
         if (this.lastline) {
             chunk = this.lastline + chunk;
             this.lastline = undefined;

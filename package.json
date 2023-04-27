@@ -13,17 +13,12 @@
         "check:format": "prettier --check src/*.ts src/**/*.ts",
         "ci-format": "prettier --check src/*.ts src/**/*.ts",
         "build": "tsc",
-        "docker:build": "docker build -t thinkspiritlab/heng-client .",
-        "docker:build:fresh": "docker build -t thinkspiritlab/heng-client --no-cache .",
-        "docker:run": "docker run --cgroupns private --privileged -v $(pwd)/config.toml:/usr/src/app/config.toml heng-client",
-        "docker:run:dev": "docker run --cgroupns private --privileged --network=\"host\" -v $(pwd)/config.toml:/usr/src/app/config.toml heng-client",
         "dev": "ts-node-dev --respawn -- src/index.ts",
         "start": "node dist/index.js"
     },
     "devDependencies": {
         "@types/lodash": "^4.14.182",
         "@types/validator": "^13.7.2",
-        "@types/ws": "^8.5.3",
         "@typescript-eslint/eslint-plugin": "^5.26.0",
         "@typescript-eslint/parser": "^5.26.0",
         "eslint": "^8.16.0",
@@ -38,18 +33,12 @@
     },
     "dependencies": {
         "@iarna/toml": "^2.2.5",
-        "@types/fs-extra": "^9.0.8",
-        "@types/node": "^18.15.11",
-        "@types/unzip-stream": "^0.3.0",
+        "@types/node": "^16.11.7",
         "axios": "^0.27.2",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.13.2",
-        "fs-extra": "^10.1.0",
         "lodash": "^4.17.20",
         "log4js": "^6.4.7",
-        "moment": "^2.29.3",
-        "reflect-metadata": "^0.1.13",
-        "unzip-stream": "^0.3.1",
-        "ws": "^7.5.7"
+        "reflect-metadata": "^0.1.13"
     }
 }

@@ -2,8 +2,8 @@ import { Writable } from "stream";
 
 // may replaced by node:readline/promise node:17
 export class ReadLine extends Writable {
-    closed: boolean = false;
-    errored: boolean = false;
+    closed?: boolean;
+    errored?: boolean;
     lines: string[] = [];
     lastline: string | undefined = undefined;
     consumer:
@@ -17,12 +17,16 @@ export class ReadLine extends Writable {
         super({
             decodeStrings: false,
         });
-        this.on("close", () => {
-            this.closed = true;
-        });
-        this.on("error", (err) => {
-            this.errored = true;
-        });
+        if (!("closed" in this)) {
+            this.on("close", () => {
+                this.closed = true;
+            });
+        }
+        if (!("errored" in this)) {
+            this.on("error", (err) => {
+                this.errored = true;
+            });
+        }
     }
     _write(
         chunk: any,

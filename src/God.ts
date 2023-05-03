@@ -1,8 +1,10 @@
+import axios from "axios";
 import { DockerProcess } from "./Spawn/Process";
 import { ExecutableAgent } from "./Utilities/ExecutableAgent";
 import { ReadLine } from "./Utilities/ReadLine";
 import { timeout } from "./Utilities/util";
 import {
+    Callback,
     CompileSingleResult,
     FromJudger,
     Game,
@@ -15,6 +17,7 @@ import {
     Verdict,
 } from "./decl";
 import { getLogger } from "log4js";
+import { retry } from "./Utilities/File";
 const logger = getLogger(`God`);
 
 export function generateVerdict(
@@ -45,8 +48,11 @@ export function generateVerdict(
 }
 
 export class God {
-    constructor(private readonly codes: Game) {}
-    async getResult(): Promise<GameResult> {
+    constructor(
+        private readonly codes: Game,
+        private readonly callback: Callback
+    ) {}
+    async start(): Promise<void> {
         const executableDict: Record<string, ExecutableAgent> = {};
         const compileResult: Record<string, CompileSingleResult> = {};
         const processDict: Record<string, DockerProcess> = {};
@@ -56,6 +62,7 @@ export class God {
 
         try {
             // complie
+            this.updateStatus(1);
             for (const key in this.codes) {
                 const agent = new ExecutableAgent(this.codes[key]);
                 await agent.init();
@@ -70,6 +77,7 @@ export class God {
             }
 
             // run
+            this.updateStatus(2);
             for (const key in executableDict) {
                 const agent = executableDict[key];
                 const process = await agent.exec();
@@ -110,8 +118,21 @@ export class God {
                     await judger.stop();
                     cancel();
 
-                    // validate
-                    if (!fromJudger) {
+                    // validate, may use class-vaildator
+                    if (
+                        !(
+                            typeof fromJudger.display === "string" &&
+                            typeof fromJudger.content === "object" &&
+                            ((fromJudger.command === "finish" &&
+                                Object.values(fromJudger.content).every(
+                                    (v) => typeof v === "number"
+                                )) ||
+                                (fromJudger.command === "request" &&
+                                    Object.values(fromJudger.content).every(
+                                        (v) => typeof v === "string"
+                                    )))
+                        )
+                    ) {
                         throw new Error("NJ");
                     }
                 } catch (err) {
@@ -167,9 +188,7 @@ export class God {
                                     );
                                 }
                                 let s = fromJudger.content[key] as string;
-                                if (!s.endsWith("\n")) {
-                                    s += "\n";
-                                }
+                                s += "\n";
                                 const cancel = timeout(
                                     gamer,
                                     this.codes[key].limit.time
@@ -226,9 +245,33 @@ export class God {
                 await executableDict[key].clean();
             }
         }
-        return {
+        this.updateResult({
             complie: compileResult,
             round: roundSummary,
-        };
+        });
+    }
+
+    async updateStatus(status: number) {
+        try {
+            await retry(async () => {
+                await axios.post(this.callback.update, {
+                    status: status,
+                });
+            }, 3);
+        } catch (err) {
+            logger.error(err);
+        }
+    }
+
+    async updateResult(result: GameResult) {
+        try {
+            await retry(async () => {
+                await axios.post(this.callback.finish, {
+                    result: JSON.stringify(result),
+                });
+            }, 3);
+        } catch (err) {
+            logger.error(err);
+        }
     }
 }

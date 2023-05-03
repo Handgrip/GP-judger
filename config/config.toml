@@ -1,6 +1,9 @@
 [self]
 judgeCapability = 4
 name = "TestJudger"
+port = 8999
+host = "0.0.0.0"
+trustIp = "127.0.0.1"
 [language]
 c = "/usr/bin/gcc"
 cpp = "/usr/bin/g++"

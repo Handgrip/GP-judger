@@ -8,6 +8,14 @@ export interface Code {
     limit: Limit;
 }
 export type Game = Record<string, Code>;
+export interface Callback {
+    update: string;
+    finish: string;
+}
+export interface Task {
+    game: Game;
+    callback: Callback;
+}
 export interface TimeUsage {
     usr: number;
     sys: number;

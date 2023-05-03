@@ -47,6 +47,16 @@ export class SelfConfig {
     @IsString()
     @IsOptional()
     software?: string;
+    @IsString()
+    @IsNotEmpty()
+    host!: string;
+    @IsInt()
+    @Min(80)
+    @Max(65534)
+    port!: number;
+    @IsString()
+    @IsNotEmpty()
+    trustIp!: string;
 }
 export class JudgeFactoryConfig {
     @IsString()

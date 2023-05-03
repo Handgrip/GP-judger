@@ -6,7 +6,7 @@ import { spawn } from "child_process";
 import { backOff } from "../Utilities/util";
 import { DockerHelper, DockerProcess } from "./Process";
 import { getLogger } from "log4js";
-import { getConfig } from "src/Config";
+import { getConfig } from "../Config";
 const logger = getLogger("Spawn");
 
 export interface MountOption {

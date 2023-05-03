@@ -12,14 +12,17 @@ export function getConfiguredLanguage(
     lang = lang.toLowerCase();
     switch (lang) {
         case "c":
+        case "c99":
             return new C(option);
             break;
         case "cpp":
         case "cxx":
         case "c++":
+        case "cpp17":
             return new CPP(option);
             break;
         case "java":
+        case "java8":
             return new Java(option);
             break;
         case "py":

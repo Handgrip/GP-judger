@@ -61,7 +61,7 @@ export class God {
         const gamerVerdict: Record<string, Verdict> = {};
 
         try {
-            // complie
+            // compile
             this.updateStatus(1);
             for (const key in this.codes) {
                 const agent = new ExecutableAgent(this.codes[key]);
@@ -246,7 +246,7 @@ export class God {
             }
         }
         this.updateResult({
-            complie: compileResult,
+            compile: compileResult,
             round: roundSummary,
         });
     }

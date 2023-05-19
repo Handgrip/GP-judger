@@ -34,7 +34,7 @@ export type JudgerRoundSummary = UsageVerdict & { output: FromJudger };
 export type SingleGamerRoundSummary = UsageVerdict & GamerResponse;
 export type GamerRoundSummary = Record<string, SingleGamerRoundSummary>;
 export interface GameResult {
-    complie: Record<string, CompileSingleResult>;
+    compile: Record<string, CompileSingleResult>;
     round: (JudgerRoundSummary | GamerRoundSummary)[];
 }
 export type Verdict = "OK" | "TLE" | "MLE" | "NJ" | "RE" | "CE" | "SE" | "NR";

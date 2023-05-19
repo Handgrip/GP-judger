@@ -32,7 +32,7 @@ ts 业务逻辑、拉取任务、返回 display（部分返回、最终结果返
 输出
 ```json
 {
-    "complie":{
+    "compile":{
         "judger":{
             "time":{
                 "usr":0,

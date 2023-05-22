@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <style>
+        body {
+            margin-top: 20px;
+            text-align: center;
+            font-family: sans-serif;
+        }
+
+        #grid {
+            display: inline-block;
+            background-color: #F8B77F;
+            background-image: linear-gradient(#F5BA80, #F4AC65);
+            box-shadow: 10px 10px 0 #8C4D21, 9px 9px 0 #8C4D21, 8px 8px 0 #8C4D21, 7px 7px 0 #8C4D21,
+                6px 6px 0 #8C4D21, 5px 5px 0 #8C4D21, 4px 4px 0 #8C4D21, 3px 3px 0 #8C4D21, 2px 2px 0 #8C4D21, 1px 1px 0 #8C4D21;
+            padding: 10px;
+        }
+
+        #right {
+            display: inline-block;
+            vertical-align: top;
+            margin-top: 50px;
+            margin-left: 20px;
+            text-align: left;
+            font-size: 16px;
+        }
+
+        .row::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+
+        .cell {
+            display: block;
+            float: left;
+            position: relative;
+            width: 30px;
+            height: 30px;
+            margin: 1px;
+        }
+
+        .cell::before,
+        .cell::after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: -1px;
+            left: 14px;
+            height: 32px;
+            width: 2px;
+            background-color: #000;
+        }
+
+        .cell::after {
+            top: 14px;
+            left: -1px;
+            height: 2px;
+            width: 32px;
+        }
+
+        .cell>.black,
+        .cell>.white {
+            display: block;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .cell>.black {
+            box-shadow: inset 5px 5px 5px rgba(180, 180, 180, .5),
+                1px 1px 1px rgba(100, 100, 100, .2);
+            background-color: #000;
+        }
+
+        .cell>.white {
+            box-shadow: inset -5px -5px 15px rgba(180, 180, 180, .5),
+                1px 1px 1px rgba(100, 100, 100, .2);
+            background-color: #FFF;
+        }
+
+        .cell>.black.last {
+            box-shadow: inset 5px 5px 5px rgba(180, 180, 180, .5),
+                0 0 2px 2px #CF3D14;
+        }
+
+        .cell>.white.last {
+            box-shadow: inset -5px -5px 15px rgba(180, 180, 180, .5),
+                0 0 2px 2px #CF3D14;
+        }
+
+        #grid.clickable .cell {
+            cursor: pointer;
+        }
+
+        #grid.clickable .cell:hover {
+            border-radius: 50%;
+            background-color: #975;
+        }
+
+        .row:first-child>.cell::before {
+            top: 14px;
+        }
+
+        .row:last-child>.cell::before {
+            height: 16px;
+        }
+
+        .cell:first-child::after {
+            left: 14px;
+        }
+
+        .cell:last-child::after {
+            width: 17px;
+        }
+
+        #message {
+            display: none;
+            position: absolute;
+            background-color: #FFF;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .3);
+            padding: 20px;
+            width: 400px;
+            margin-left: -220px;
+            left: 50%;
+            top: 30%;
+            z-index: 100;
+            font-family: sans-serif;
+            white-space: pre-line;
+            font-size: 20px;
+            border-radius: 8px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="grid"></div>
+    <div id="right">
+        <p>回合：<span id="round"></span></p>
+        <p>黑方：<span id="blackName"></span></p>
+        <p>白方：<span id="whiteName"></span></p>
+    </div>
+    <div id="message"></div>
+    <script src="/jquery-3.6.4.min.js"></script>
+    <script src="/player_api.js"></script>
+    <script>
+        var SIZE = 15;
+        var i;
+        for (i = 0; i < SIZE; i++) {
+            $("#grid").append("<div class='row'>" + Array(SIZE + 1).join("<div class='cell'></div>") + "</div>");
+        }
+        var notify = function (message) {
+            $("#message").text(message).fadeIn().delay(1000).fadeOut();
+        };
+        var round = 0;
+        var displayHandler = function (display) {
+            round++;
+            $("#round").text(round);
+            $(".last").removeClass("last");
+            if (display.gamer !== undefined) {
+                gamer = display.gamer === 0 ? "black" : "white";
+                $("#grid > .row").eq(display.y).children().eq(display.x).append("<div class='last " + gamer + "'></div>");
+            }
+            if (display.winner !== undefined) {   // 可能是 0
+                if (display.winner === "none") {
+                    notify("游戏结束！双方平局");
+                } else {
+                    var str = "",
+                        winner = display.winner === 0 ? "黑子" : "白子",
+                        loser = display.winner === 1 ? "黑子" : "白子";
+                    if (display.error) {
+                        str += loser + "发生错误：" + display.error + "\n";
+                    }
+                    str += "游戏结束！" + winner + "获胜";
+                    notify(str);
+                }
+            }
+        };
+        var names = infoProvider.getPlayerNames();
+        $("#blackName").text(names[0]);
+        $("#whiteName").text(names[1]);
+        infoProvider.setSize(1000, 600);
+        infoProvider.setDisplayCallback(function (display) {
+            console.log(display);
+            displayHandler(JSON.parse(display));
+        });
+        infoProvider.notifyInitComplete();
+    </script>
+</body>
+
+</html>

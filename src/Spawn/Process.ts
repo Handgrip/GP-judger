@@ -7,10 +7,12 @@ import { backOff } from "../Utilities/util";
 
 const CgPath = "/sys/fs/cgroup";
 const DockerGroup = "docker";
+
 enum SubSystem {
     Cpu = "cpu",
     Memory = "memory",
 }
+
 enum CpuFileName {
     UsageUser = "cpuacct.usage_user",
     UsageSys = "cpuacct.usage_sys",

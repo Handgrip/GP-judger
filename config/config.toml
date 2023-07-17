@@ -1,7 +1,7 @@
 [self]
 judgeCapability = 4
 name = "TestJudger"
-port = 9900
+port = 8999
 host = "0.0.0.0"
 trustIp = "127.0.0.1"
 [language]
@@ -17,7 +17,7 @@ tmpdirBase = "/tmp/GP"
 defaultPidLimit = 64
 uid = 1999
 gid = 1999
-imageId = "e9b5fed0edb1"
+imageId = "5c802da8a161"
 compileMemoryLimit = 536870912
 compileTimeLimit = 10000
 fileLimit = 134217728

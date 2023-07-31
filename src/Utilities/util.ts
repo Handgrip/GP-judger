@@ -64,6 +64,9 @@ export function getline(stream: Readable) {
 export function timeout(process: DockerProcess, ms: number): () => void {
     let timer: NodeJS.Timer = setTimeout(() => {
         logger.warn("timeout, killing");
+        process.stdin?.destroy();
+        process.stdout?.destroy();
+        process.stderr?.destroy();
         process.terminal();
     }, ms);
     return () => {
